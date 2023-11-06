@@ -2,51 +2,54 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const fs = require('fs');
-const { v4: uuid } =  require('uuid');
+const { v4: uuidv4 } = require('uuid');
+// const andrea = require('./routes/videos');
 
 app.use(cors());
 app.use(express.json());
-app.use('/photos', express.static('./static/images'))
 
-app.get('/', (_request, response) => {
-    response.send('christian is flexy');
+app.use('/images', express.static('./public/images'));
+// app.use('/videos', andrea);
+const readData = () => {
+    return JSON.parse(fs.readFileSync('./data/video-posts.json', 'utf8'));
+};
+
+const writeData = (data) => {
+    fs.writeFileSync('./data/video-posts.json', JSON.stringify(data, null, 2), 'utf8');
+};
+
+app.get('/videos', (req, res) => {
+    const videos = readData();
+    res.json(videos.map(({ id, title, channel, image, timestamp, likes, views, comments }) => ({ id, title, channel, image, timestamp, likes, views, comments })));
 });
 
-// Create route; posts would be replaced with 'videos'
-// Get request function 
-app.get('/videos', (request, response) => {
-    const something = fs.readFileSync('./data/video-posts.json');
-    response.send(something);
-});
-
-// Post request function 
-app.post('/posts', (request, response) => {
-    const something = fs.readFileSync('./data/video-posts.json');
-    const parseSomething = JSON.parse(something);
-
-    const { username, comment } = request.body;
-
-    const newObj = {
-        id: uuid(),
-        avatar: '/tom.jpeg',
-        username: username,
-        comment: comment,
-        likes: 0
+app.get('/videos/:id', (req, res) => {
+    const { id } = req.params;
+    const videos = readData();
+    const video = videos.find((video) => video.id === id);
+    if (!video) {
+    return res.status(404).json({ message: "No video with that id exists" });
     }
-
-    parseSomething.push(newObj);
-    fs.writeFileSync('./data/blog-posts.json', JSON.stringify(parseSomething));
-    response.json(newObj);
-
+    res.json(video);
 });
 
-app.get('/posts/:searchParam', (request, response) => {
-    const something = fs.readFileSync('./data/blog-posts.json');
-    const parseSomething = JSON.parse(something);
-    const found = parseSomething.find( x => x.username === request.params.searchParam);
-    response.json(found);
+app.post('/videos', (req, res) => {
+    const videos = readData();
+    const { title, description, channel } = req.body;
+
+    const newVideo = {
+        id: uuidv4(),
+        title,
+        description,
+        channel,
+        image: '/public/images/upload-video-preview.jpg', 
+    };
+
+    videos.push(newVideo);
+    writeData(videos);
+    res.status(201).json(newVideo);
 });
 
 app.listen(8085, () => {
-    console.log('listening on port 8085');
+    console.log('Server listening on port 8085');
 });
