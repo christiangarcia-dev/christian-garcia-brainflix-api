@@ -4,11 +4,11 @@ const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 
 const readData = () => {
-    return JSON.parse(fs.readFileSync('./data/video-posts.json', 'utf8'));
+    return JSON.parse(fs.readFileSync('./data/videos.json', 'utf8'));
 };
 
 const writeData = (data) => {
-    fs.writeFileSync('./data/video-posts.json', JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync('./data/videos.json', JSON.stringify(data, null, 2), 'utf8');
 };
 
 router.get('/', (req, res) => {
